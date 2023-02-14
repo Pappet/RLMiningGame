@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import tcod
 import copy
+import traceback
 
 import entity_factories
 from engine import Engine
@@ -58,7 +59,15 @@ def main() -> None:
             engine.event_handler.on_render(console=root_console)
             context.present(root_console)
 
-            engine.event_handler.handle_events(context)
+            try:
+                for event in tcod.event.wait():
+                    context.convert_event(event)
+                    engine.event_handler.handle_events(event)
+            except Exception:  # Handle exceptions in game.
+                traceback.print_exc()  # Print error in stderr.
+                # Then print the error to the message log.
+                engine.message_log.add_message(
+                    traceback.format_exc(), color.error)
 
 
 if __name__ == "__main__":

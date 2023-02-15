@@ -5,7 +5,7 @@ config = c.RawConfigParser()
 
 def Read():
     config = c.RawConfigParser()
-    config.read("settings.cfg")
+    config.read("config_files/settings.cfg")
 
     settings.screen_width = config.getint("ScreenInfo", "screen_width")
     settings.screen_height = config.getint("ScreenInfo", "screen_height")

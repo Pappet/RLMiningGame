@@ -46,7 +46,7 @@ class Fighter(BaseComponent):
 
         return amount_recovered
 
-    def take_damege(self, amount: int) -> None:
+    def take_damage(self, amount: int) -> None:
         self.hp -= amount
 
     def die(self) -> None:

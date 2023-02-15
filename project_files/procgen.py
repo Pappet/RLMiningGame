@@ -80,10 +80,12 @@ def place_entities(
         y = random.randint(room.y1 + 1, room.y2 - 1)
 
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-            if random.random() < 0.8:
+            item_chance = random.random()
+
+            if item_chance < 0.6:
                 entity_factories.health_potion.spawn(dungeon, x, y)
             else:
-                entity_factories.greater_health_potion.spawn(dungeon, x, y)
+                entity_factories.lightning_scroll.spawn(dungeon, x, y)
 
 
 def generate_dungeon(

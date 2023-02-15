@@ -1,5 +1,5 @@
 import configparser as c
-import settings
+import project_files.settings as settings
 config = c.RawConfigParser()
 
 

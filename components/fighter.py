@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from components.base_component import BaseComponent
-from render_order import RenderOrder
-from input_handlers import GameOverEventHandler
-import color
+from project_files.render_order import RenderOrder
+from project_files.input_handlers import GameOverEventHandler
+import project_files.color as color
 
 
 if TYPE_CHECKING:
-    from entity import Actor
+    from project_files.entity import Actor
 
 
 class Fighter(BaseComponent):

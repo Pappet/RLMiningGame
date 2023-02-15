@@ -3,7 +3,7 @@ import textwrap
 
 import tcod
 
-import color
+import project_files.color as color
 
 
 class Message:

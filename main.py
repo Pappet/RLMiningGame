@@ -3,12 +3,12 @@ import tcod
 import copy
 import traceback
 
-import entity_factories
-from engine import Engine
-from procgen import generate_dungeon
-import color
-import settings
-import config_parser
+import project_files.entity_factories as entity_factories
+from project_files.engine import Engine
+from project_files.procgen import generate_dungeon
+import project_files.color as color
+import project_files.settings as settings
+import project_files.config_parser as config_parser
 
 
 def main() -> None:

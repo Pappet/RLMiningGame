@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
-import actions
-import color
+import project_files.actions as actions
+import project_files.color as color
 import components.inventory
 from components.base_component import BaseComponent
-from exceptions import Impossible
+from project_files.exceptions import Impossible
 
 if TYPE_CHECKING:
-    from entity import Actor, Item
+    from project_files.entity import Actor, Item
 
 
 class Consumable(BaseComponent):

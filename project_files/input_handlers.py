@@ -4,19 +4,19 @@ from typing import Optional, TYPE_CHECKING
 
 import tcod
 
-import actions
-from actions import (
+import project_files.actions as actions
+from project_files.actions import (
     Action,
     BumpAction,
     PickupAction,
     WaitAction
 )
-import color
-import exceptions
+import project_files.color as color
+import project_files.exceptions as exceptions
 
 if TYPE_CHECKING:
-    from engine import Engine
-    from entity import Item
+    from project_files.engine import Engine
+    from project_files.entity import Item
 
 MOVE_KEYS = {
     # Arrow keys.

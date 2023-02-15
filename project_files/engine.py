@@ -5,15 +5,15 @@ from typing import TYPE_CHECKING
 from tcod.console import Console
 from tcod.map import compute_fov
 
-import exceptions
-from input_handlers import MainGameEventHandler
-from render_functions import render_bar, render_names_at_mouse_location
-from message_log import MessageLog
+import project_files.exceptions as exceptions
+from project_files.input_handlers import MainGameEventHandler
+from project_files.render_functions import render_bar, render_names_at_mouse_location
+from project_files.message_log import MessageLog
 
 if TYPE_CHECKING:
-    from input_handlers import EventHandler
-    from game_map import GameMap
-    from entity import Actor
+    from project_files.input_handlers import EventHandler
+    from project_files.game_map import GameMap
+    from project_files.entity import Actor
 
 
 class Engine:

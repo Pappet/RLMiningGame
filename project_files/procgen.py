@@ -4,12 +4,12 @@ from typing import Iterator, List, Tuple, TYPE_CHECKING
 
 import tcod
 
-from game_map import GameMap
-import tile_types
-import entity_factories
+from project_files.game_map import GameMap
+import project_files.tile_types as tile_types
+import project_files.entity_factories as entity_factories
 
 if TYPE_CHECKING:
-    from engine import Engine
+    from project_files.engine import Engine
 
 
 class RectangularRoom:

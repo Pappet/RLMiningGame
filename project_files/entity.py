@@ -4,14 +4,14 @@ import copy
 from typing import Tuple
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
 
-from render_order import RenderOrder
+from project_files.render_order import RenderOrder
 
 if TYPE_CHECKING:
     from components.ai import BaseAI
     from components.consumable import Consumable
     from components.fighter import Fighter
     from components.inventory import Inventory
-    from game_map import GameMap
+    from project_files.game_map import GameMap
 
 T = TypeVar("T", bound="Entity")
 

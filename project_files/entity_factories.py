@@ -2,7 +2,7 @@ from components.ai import HostileEnemy
 from components.consumable import HealingConsumable
 from components.fighter import Fighter
 from components.inventory import Inventory
-from entity import Actor, Item
+from project_files.entity import Actor, Item
 
 player = Actor(
     char="@",

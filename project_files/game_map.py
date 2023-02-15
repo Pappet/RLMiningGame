@@ -5,12 +5,12 @@ from typing import Iterable, Iterator, Optional, TYPE_CHECKING
 import numpy as np  # type: ignore
 from tcod.console import Console
 
-from entity import Actor, Item
-import tile_types
+from project_files.entity import Actor, Item
+import project_files.tile_types as tile_types
 
 if TYPE_CHECKING:
-    from engine import Engine
-    from entity import Entity
+    from project_files.engine import Engine
+    from project_files.entity import Entity
 
 
 class GameMap:

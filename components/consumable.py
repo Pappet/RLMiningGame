@@ -8,7 +8,7 @@ import components.ai
 import components.inventory
 from components.base_component import BaseComponent
 from project_files.exceptions import Impossible
-from project_files.input_handlers import SingleRangedAttackHandler
+from project_files.input_handlers import AreaRangedAttackHandler, SingleRangedAttackHandler
 
 if TYPE_CHECKING:
     from project_files.entity import Actor, Item
@@ -68,6 +68,42 @@ class ConfusionConsumable(Consumable):
         target.ai = components.ai.ConfusedEnemy(
             entity=target, previous_ai=target.ai, turns_remaining=self.number_of_turns,
         )
+        self.consume()
+
+
+class FireballDamageConsumable(Consumable):
+    def __init__(self, damage: int, radius: int):
+        self.damage = damage
+        self.radius = radius
+
+    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+        self.engine.message_log.add_message(
+            "Select a target location.", color.needs_target
+        )
+        self.engine.event_handler = AreaRangedAttackHandler(
+            self.engine,
+            radius=self.radius,
+            callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
+        )
+        return None
+
+    def activate(self, action: actions.ItemAction) -> None:
+        target_xy = action.target_xy
+
+        if not self.engine.game_map.visible[target_xy]:
+            raise Impossible("You cannot target an area that you cannot see.")
+
+        targets_hit = False
+        for actor in self.engine.game_map.actors:
+            if actor.distance(*target_xy) <= self.radius:
+                self.engine.message_log.add_message(
+                    f"The {actor.name} is engulfed in a fiery explosion, taking {self.damage} damage!"
+                )
+                actor.fighter.take_damage(self.damage)
+                targets_hit = True
+
+        if not targets_hit:
+            raise Impossible("There are no targets in the radius.")
         self.consume()
 
 

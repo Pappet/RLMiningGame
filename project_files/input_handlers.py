@@ -351,7 +351,8 @@ class MainGameEventHandler(EventHandler):
         elif key in WAIT_KEYS:
             action = WaitAction(player)
         elif key == tcod.event.K_v:
-            self.engine.event_handler = HistoryViewer(self.engine)
+            self.engine.event_handler = HistoryViewer(
+                self.engine, self)
         elif key == tcod.event.K_g:
             action = PickupAction(player)
 
@@ -374,16 +375,18 @@ class GameOverEventHandler(EventHandler):
         if event.sym == tcod.event.K_ESCAPE:
             raise SystemExit()
         elif event.sym == tcod.event.K_v:
-            self.engine.event_handler = HistoryViewer(self.engine)
+            self.engine.event_handler = HistoryViewer(
+                self.engine, self)
 
 
 class HistoryViewer(EventHandler):
     """Print the history on a larger window which can be navigated."""
 
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, last_event_handler: EventHandler):
         super().__init__(engine)
         self.log_length = len(engine.message_log.messages)
         self.cursor = self.log_length - 1
+        self.last_event_handler = last_event_handler
 
     def on_render(self, console: tcod.Console) -> None:
         super().on_render(console)  # Draw the main state as the background.
@@ -427,4 +430,7 @@ class HistoryViewer(EventHandler):
             # Move directly to the last message.
             self.cursor = self.log_length - 1
         else:  # Any other key moves back to the main game state.
-            self.engine.event_handler = MainGameEventHandler(self.engine)
+            if isinstance(self.last_event_handler, MainGameEventHandler):
+                self.engine.event_handler = MainGameEventHandler(self.engine)
+            elif isinstance(self.last_event_handler, GameOverEventHandler):
+                self.engine.event_handler = GameOverEventHandler(self.engine)

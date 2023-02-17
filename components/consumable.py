@@ -4,9 +4,11 @@ from typing import Optional, TYPE_CHECKING
 
 import project_files.actions as actions
 import project_files.color as color
+import components.ai
 import components.inventory
 from components.base_component import BaseComponent
 from project_files.exceptions import Impossible
+from project_files.input_handlers import SingleRangedAttackHandler
 
 if TYPE_CHECKING:
     from project_files.entity import Actor, Item
@@ -32,6 +34,41 @@ class Consumable(BaseComponent):
         inventory = entity.parent
         if isinstance(inventory, components.inventory.Inventory):
             inventory.items.remove(entity)
+
+
+class ConfusionConsumable(Consumable):
+    def __init__(self, number_of_turns: int):
+        self.number_of_turns = number_of_turns
+
+    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+        self.engine.message_log.add_message(
+            "Select a target location.", color.needs_target
+        )
+        self.engine.event_handler = SingleRangedAttackHandler(
+            self.engine,
+            callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
+        )
+        return None
+
+    def activate(self, action: actions.ItemAction) -> None:
+        consumer = action.entity
+        target = action.target_actor
+
+        if not self.engine.game_map.visible[action.target_xy]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if not target:
+            raise Impossible("You must select an enemy to target.")
+        if target is consumer:
+            raise Impossible("You cannot confuse yourself!")
+
+        self.engine.message_log.add_message(
+            f"The eyes of the {target.name} look vacant, as it starts to stumble around!",
+            color.status_effect_applied,
+        )
+        target.ai = components.ai.ConfusedEnemy(
+            entity=target, previous_ai=target.ai, turns_remaining=self.number_of_turns,
+        )
+        self.consume()
 
 
 class HealingConsumable(Consumable):

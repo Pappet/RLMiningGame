@@ -9,7 +9,8 @@ from project_files.actions import (
     Action,
     BumpAction,
     PickupAction,
-    WaitAction
+    WaitAction,
+    DestroyWallAction
 )
 import project_files.color as color
 import project_files.exceptions as exceptions
@@ -46,6 +47,15 @@ MOVE_KEYS = {
     tcod.event.K_u: (1, -1),
     tcod.event.K_b: (-1, 1),
     tcod.event.K_n: (1, 1),
+}
+
+MODIFIER_KEYS = {
+    tcod.event.K_LSHIFT,
+    tcod.event.K_RSHIFT,
+    tcod.event.K_LCTRL,
+    tcod.event.K_RCTRL,
+    tcod.event.K_LALT,
+    tcod.event.K_RALT,
 }
 
 WAIT_KEYS = {
@@ -170,14 +180,7 @@ class AskUserEventHandler(EventHandler):
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         """By default any key exits this input handler."""
-        if event.sym in {  # Ignore modifier keys.
-            tcod.event.K_LSHIFT,
-            tcod.event.K_RSHIFT,
-            tcod.event.K_LCTRL,
-            tcod.event.K_RCTRL,
-            tcod.event.K_LALT,
-            tcod.event.K_RALT,
-        }:
+        if event.sym in MODIFIER_KEYS:
             return None
         return self.on_exit()
 
@@ -392,6 +395,20 @@ class AreaRangedAttackHandler(SelectIndexHandler):
         return self.callback((x, y))
 
 
+class MiningEventHandler(EventHandler):
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        action: Optional[Action] = None
+
+        key = event.sym
+
+        player = self.engine.player
+        if key in MOVE_KEYS:
+            dx, dy = MOVE_KEYS[key]
+            return DestroyWallAction(player, dx, dy)
+        elif key == tcod.event.K_m:
+            return MainGameEventHandler(self.engine)
+
+
 class MainGameEventHandler(EventHandler):
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
@@ -409,13 +426,14 @@ class MainGameEventHandler(EventHandler):
             return HistoryViewer(self.engine)
         elif key == tcod.event.K_g:
             action = PickupAction(player)
-
         elif key == tcod.event.K_i:
             return InventoryActivateHandler(self.engine)
         elif key == tcod.event.K_d:
             return InventoryDropHandler(self.engine)
         elif key == tcod.event.K_SPACE:
             return LookHandler(self.engine)
+        elif key == tcod.event.K_m:
+            return MiningEventHandler(self.engine)
 
         elif key == tcod.event.K_ESCAPE:
             raise SystemExit()

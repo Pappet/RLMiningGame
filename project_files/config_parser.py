@@ -10,7 +10,9 @@ def Read():
     settings.screen_width = config.getint("ScreenInfo", "screen_width")
     settings.screen_height = config.getint("ScreenInfo", "screen_height")
     settings.title = config.get("ScreenInfo", "title")
+    settings.autor = config.get("ScreenInfo", "autor")
     settings.vsync = config.getboolean("ScreenInfo", "vsync")
+    settings.menu_width = config.getint("ScreenInfo", "menu_width")
 
     settings.map_width = config.getint("MapInfo", "map_width")
     settings.map_height = config.getint("MapInfo", "map_height")
@@ -23,6 +25,8 @@ def Read():
         "MapInfo", "max_items_per_room")
 
     settings.font_file = config.get("FontInfo", "font_file")
+    settings.menu_background_file = config.get(
+        "FontInfo", "menu_background_file")
 
 
 def Write():
@@ -30,7 +34,9 @@ def Write():
     config.set("ScreenInfo", "screen_width", "settings.screen_width")
     config.set("ScreenInfo", "screen_height", "settings.screen_height")
     config.set("ScreenInfo", "title", "settings.title")
+    config.set("ScreenInfo", "autor", "settings.autor")
     config.set("ScreenInfo", "vsync", "settings.vsync")
+    config.set("ScreenInfo", "menu_width", "settings.menu_width")
 
     config.add_section("MapInfo")
     config.set("MapInfo", "map_width", "settings.map_width")
@@ -45,3 +51,5 @@ def Write():
 
     config.add_section("FontInfo")
     config.set("FontInfo", "font_file", "settings.font_file")
+    config.set("FontInfo", "menu_background_file",
+               "settings.menu_background_file")

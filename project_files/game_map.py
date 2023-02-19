@@ -63,7 +63,6 @@ class GameMap:
         return None
 
     # Eine Funktion, die überprüft, ob eine Wand zerstörbar ist
-
     def is_destructible_wall(self, x: int, y: int) -> bool:
         # Überprüfe, ob die Koordinaten innerhalb der Kartenbegrenzung liegen
         if not self.in_bounds(x, y):

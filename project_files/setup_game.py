@@ -12,6 +12,7 @@ import tcod
 import project_files.color as color
 from project_files.engine import Engine
 import project_files.entity_factories as entity_factories
+from project_files.game_map import GameWorld
 import project_files.input_handlers as input_handlers
 from project_files.procgen import generate_dungeon
 import project_files.settings as settings
@@ -27,7 +28,8 @@ def new_game() -> Engine:
 
     engine = Engine(player=player)
 
-    engine.game_map = generate_dungeon(
+    engine.game_world = GameWorld(
+        engine=engine,
         max_rooms=settings.max_rooms,
         room_min_size=settings.room_min_size,
         room_max_size=settings.room_max_size,
@@ -35,8 +37,8 @@ def new_game() -> Engine:
         map_height=settings.map_height,
         max_monsters_per_room=settings.max_monsters_per_room,
         max_items_per_room=settings.max_items_per_room,
-        engine=engine
     )
+    engine.game_world.generate_floor()
     engine.update_fov()
 
     engine.message_log.add_message(

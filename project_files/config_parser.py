@@ -24,6 +24,8 @@ def Read():
     settings.max_items_per_room = config.getint(
         "MapInfo", "max_items_per_room")
 
+    settings.level_up_factor = config.getint("PlayerInfo", "level_up_factor")
+
     settings.font_file = config.get("FontInfo", "font_file")
     settings.menu_background_file = config.get(
         "FontInfo", "menu_background_file")
@@ -48,6 +50,9 @@ def Write():
                "settings.max_monsters_per_room")
     config.set("MapInfo", "max_items_per_room",
                "settings.max_items_per_room")
+
+    config.add_section("PlayerInfo")
+    config.set("PlayerInfo", "level_up_factor", "settings.level_up_factor")
 
     config.add_section("FontInfo")
     config.set("FontInfo", "font_file", "settings.font_file")

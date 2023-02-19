@@ -13,5 +13,7 @@ max_rooms = 30
 max_monsters_per_room = 2
 max_items_per_room = 2
 
+level_up_factor = 150
+
 font_file = "art/dejavu10x10_gs_tc.png"
 menu_background_file = "art/menu_background.png"

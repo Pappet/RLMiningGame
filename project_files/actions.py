@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Optional, Tuple, TYPE_CHECKING
+from project_files import tile_types
 
 import project_files.color as color
 import project_files.exceptions as exceptions
@@ -161,3 +162,26 @@ class BumpAction(ActionWithDirection):
 class WaitAction(Action):
     def perform(self) -> None:
         pass
+
+
+# Eine Aktion, die eine Wand in einen Boden umwandelt
+class DestroyWallAction(ActionWithDirection):
+    def perform(self) -> None:
+        if self.engine.game_map.is_destructible_wall(self.entity.x + self.dx, self.entity.y + self.dy):
+            # Zerstöre die Wand und mache sie zu einem Boden
+            self.engine.game_map.tiles[self.entity.x +
+                                       self.dx][self.entity.y + self.dy] = tile_types.floor
+
+            # Aktualisiere das Sichtfeld der Entität
+            self.engine.update_fov()
+
+            # Gib eine Nachricht aus
+            self.engine.message_log.add_message(
+                f"{self.entity.name} zerstört eine Wand!")
+
+            # Beende die Aktion
+            return
+
+        # Wenn keine zerstörbare Wand gefunden wurde,
+        self.engine.message_log.add_message(
+            f"{self.entity.name} findet keine zerstörbare Wand!")

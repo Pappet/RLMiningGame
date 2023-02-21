@@ -139,11 +139,11 @@ class GameWorld:
         self.current_floor = current_floor
 
     def generate_floor(self) -> None:
-        from project_files.procgen import generate_dungeon
+        from project_files.procgen import generate_dungeon, generate_bsp_dungeon
 
         self.current_floor += 1
 
-        self.engine.game_map = generate_dungeon(
+        self.engine.game_map = generate_bsp_dungeon(
             max_rooms=self.max_rooms,
             room_min_size=self.room_min_size,
             room_max_size=self.room_max_size,

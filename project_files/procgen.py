@@ -201,8 +201,10 @@ def generate_dungeon(
     return dungeon
 
 
-def generate_bsp_dungeon_X(
+def generate_bsp_dungeon(
+    max_rooms: int,
     room_min_size: int,
+    room_max_size: int,
     map_width: int,
     map_height: int,
     engine: Engine
@@ -219,96 +221,24 @@ def generate_bsp_dungeon_X(
     bsp.split_recursive(
         DEPTH, room_min_size, room_min_size, 1.5, 1.5)
 
-    def traverse_node(node, dungeon):
-        if node.children:
-            # Verarbeite die beiden Kinder des aktuellen Knotens
-            traverse_node(node.children[0], dungeon)
-            traverse_node(node.children[1], dungeon)
-
-            # Verbinde die beiden Kinder durch einen Korridor
-            if node.horizontal:
-                x1 = node.children[0].x + node.children[0].width // 2
-                x2 = node.children[1].x + node.children[1].width // 2
-                y = node.y + node.children[0].height // 2
-                for x in range(min(x1, x2), max(x1, x2) + 1):
-                    dungeon.tiles[x][y] = tile_types.floor
-            else:
-                y1 = node.children[0].y + node.children[0].height // 2
-                y2 = node.children[1].y + node.children[1].height // 2
-                x = node.x + node.children[0].width // 2
-                for y in range(min(y1, y2), max(y1, y2) + 1):
-                    dungeon.tiles[x][y] = tile_types.floor
-        else:
-            # Zeichne den Raum
-            for x in range(node.x+1, node.x+node.width):
-                for y in range(node.y+1, node.y+node.height):
-                    dungeon.tiles[x][y] = tile_types.floor
-
-            new_room = RectangularRoom(node.x, node.y, node.width, node.height)
-            rooms.append(new_room)
-
-    traverse_node(bsp, dungeon)
-
-    # Random room for the stairs
-    stairs_location = random.choice(rooms)
-    rooms.remove(stairs_location)
-    dungeon.downstairs_location = stairs_location.center
-    dungeon.tiles[stairs_location.center] = tile_types.down_stairs
-
-    # Random room for player start
-    player_location = random.choice(rooms)
-    rooms.remove(player_location)
-    player.place(*player_location.center, dungeon)
-
-    # Add monsters and items
-    for room in rooms:
-        dungeon.tiles[room.inner] = tile_types.floor
-        place_entities(room, dungeon, engine.game_world.current_floor)
-
-    return dungeon
-
-
-def generate_bsp_dungeon(
-    max_rooms: int,
-    room_min_size: int,
-    room_max_size: int,
-    map_width: int,
-    map_height: int,
-    engine: Engine
-) -> GameMap:
-    """Generate a new dungeon map."""
-    player = engine.player
-    dungeon = GameMap(engine, map_width, map_height, entities=[player])
-    rooms = []
-
-    DEPTH = 10
-    # New root node
-    bsp = tcod.bsp.BSP(0, 0, map_width, map_height)
-    # Split into nodes
-    bsp.split_recursive(
-        DEPTH, room_max_size, room_max_size, 1.5, 1.5)
-
     for node in bsp.pre_order():
         if node.children:
             continue  # skip non-leaf nodes
-        # room_width = tcod.random_get_int(None,
-        #                                 room_min_size, min(node.w, room_max_size))
-        # room_height = tcod.random_get_int(None,
-        #                                  room_min_size, min(node.h, room_max_size))
-        # room_x = tcod.random_get_int(
-        #    None, node.x, node.x + node.w - room_width)
-        # room_y = tcod.random_get_int(
-        #    None, node.y, node.y + node.h - room_height)
-        new_room = RectangularRoom(node.x, node.y, node.w, node.h)
+        # create a room inside the node
+        x, y, w, h = node.x + 1, node.y + 1, node.w - 2, node.h - 2
+        w = min(w, room_max_size)
+        h = min(h, room_max_size)
+        if w < room_min_size or h < room_min_size:
+            continue
+        new_room = RectangularRoom(x, y, w, h)
         rooms.append(new_room)
 
     # Add monsters and items
     for room in rooms:
         dungeon.tiles[room.inner] = tile_types.floor
-        for x, y in tunnel_between(rooms[-1].center, room.center):
-            dungeon.tiles[x, y] = tile_types.floor
         place_entities(room, dungeon, engine.game_world.current_floor)
 
+    connect_rooms(rooms, dungeon)
     # Random room for the stairs
     stairs_location = random.choice(rooms)
     dungeon.downstairs_location = stairs_location.center
@@ -319,3 +249,37 @@ def generate_bsp_dungeon(
     player.place(*player_location.center, dungeon)
 
     return dungeon
+
+
+def connect_rooms(rooms, game_map):
+    for i in range(1, len(rooms)):
+        prev_room = rooms[i-1]
+        curr_room = rooms[i]
+
+        # find the center of each room
+        prev_center = prev_room.center
+        curr_center = curr_room.center
+
+        # flip a coin to decide which order to connect the rooms
+        if tcod.random_get_int(0, 0, 1) == 1:
+            # horizontal tunnel first, then vertical tunnel
+            create_h_tunnel(
+                prev_center[0], curr_center[0], prev_center[1], game_map)
+            create_v_tunnel(
+                prev_center[1], curr_center[1], curr_center[0], game_map)
+        else:
+            # vertical tunnel first, then horizontal tunnel
+            create_v_tunnel(
+                prev_center[1], curr_center[1], prev_center[0], game_map)
+            create_h_tunnel(
+                prev_center[0], curr_center[0], curr_center[1], game_map)
+
+
+def create_h_tunnel(x1, x2, y, game_map):
+    for x in range(min(x1, x2), max(x1, x2) + 1):
+        game_map.tiles[x, y] = tile_types.floor
+
+
+def create_v_tunnel(y1, y2, x, game_map):
+    for y in range(min(y1, y2), max(y1, y2) + 1):
+        game_map.tiles[x, y] = tile_types.floor

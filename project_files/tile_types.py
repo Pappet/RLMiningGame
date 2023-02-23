@@ -54,3 +54,34 @@ down_stairs = new_tile(
     dark=(ord(">"), (0, 0, 100), (50, 50, 150)),
     light=(ord(">"), (255, 255, 255), (200, 180, 50)),
 )
+stone = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord(" "), (255, 255, 255), (51, 51, 51)),
+    light=(ord(" "), (255, 255, 255), (204, 204, 204)),
+)
+sand = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("."), (255, 255, 255), (139, 121, 94)),
+    light=(ord("."), (255, 255, 255), (245, 222, 179)),
+)
+ore = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("°"), (255, 255, 255), (135, 102, 51)),
+    light=(ord("°"), (255, 255, 255), (205, 175, 149)),
+)
+
+Marker_green = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("#"), (255, 255, 255), (0, 255, 0)),
+    light=(ord("#"), (255, 255, 255), (0, 255, 0)),
+)
+Marker_red = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("#"), (255, 255, 255), (255, 0, 0)),
+    light=(ord("#"), (255, 255, 255), (255, 0, 0)),
+)

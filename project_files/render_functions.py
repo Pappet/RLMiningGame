@@ -16,6 +16,7 @@ def get_names_at_location(x: int, y: int, game_map: GameMap) -> str:
 
     names = ", ".join(
         entity.name for entity in game_map.entities if entity.x == x and entity.y == y
+        # game_map.tiles for game_map.tiles in game_map.tiles if game_map.tiles[0] == x and game_map.tiles[1] == y
     )
 
     return names.capitalize()

@@ -1,8 +1,10 @@
 from __future__ import annotations
+from typing import Tuple
 import random
 from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING
 
 import tcod
+import numpy as np
 
 from project_files.game_map import GameMap
 import project_files.tile_types as tile_types
@@ -37,6 +39,11 @@ enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
     5: [(entity_factories.troll, 30)],
     7: [(entity_factories.troll, 60)],
 }
+
+ore_types = [
+    ("Stone", tile_types.stone, 0.05, 3, 3),
+    ("Sand", tile_types.sand, 0.1, 2, 2),
+    ("Ore", tile_types.ore, 0.15, 2, 2),]
 
 
 def get_max_value_for_floor(
@@ -86,12 +93,37 @@ class RectangularRoom:
         self.y1 = y
         self.x2 = x + width
         self.y2 = y + height
+        self.width = width
+        self.height = height
 
     @property
     def center(self) -> Tuple[int, int]:
         center_x = int((self.x1 + self.x2) / 2)
         center_y = int((self.y1 + self.y2) / 2)
+        return center_x, center_y
 
+    @property
+    def north_wall(self) -> Tuple[int, int]:
+        center_x = random.randint(self.x1+1, self.x2-1)
+        center_y = self.y1
+        return center_x, center_y
+
+    @property
+    def east_wall(self) -> Tuple[int, int]:
+        center_x = self.x2
+        center_y = random.randint(self.y1+1, self.y2-1)
+        return center_x, center_y
+
+    @property
+    def south_wall(self) -> Tuple[int, int]:
+        center_x = random.randint(self.x1+1, self.x2-1)
+        center_y = self.y2
+        return center_x, center_y
+
+    @property
+    def west_wall(self) -> Tuple[int, int]:
+        center_x = self.x1
+        center_y = random.randint(self.y1+1, self.y2-1)
         return center_x, center_y
 
     @property
@@ -109,25 +141,7 @@ class RectangularRoom:
         )
 
 
-def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
-    """Return an L-shaped tunnel between these two points."""
-    x1, y1 = start
-    x2, y2 = end
-    if random.random() < 0.5:  # 50% chance.
-        # Move horizontally, then vertically.
-        corner_x, corner_y = x2, y1
-    else:
-        # Move vertically, then horizontally.
-        corner_x, corner_y = x1, y2
-
-    # Generate the coordinates for this tunnel.
-    for x, y in tcod.los.bresenham((x1, y1), (corner_x, corner_y)).tolist():
-        yield x, y
-    for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
-        yield x, y
-
-
-def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int,) -> None:
+def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int) -> None:
     number_of_monsters = random.randint(
         0, get_max_value_for_floor(max_monsters_by_floor, floor_number)
     )
@@ -212,9 +226,11 @@ def generate_bsp_dungeon(
     """Generate a new dungeon map."""
     player = engine.player
     dungeon = GameMap(engine, map_width, map_height, entities=[player])
+    simulate_ore_deposits(dungeon)
     rooms = []
 
-    DEPTH = 5
+    DEPTH = int(1 * engine.game_world.current_floor)
+
     # New root node
     bsp = tcod.bsp.BSP(0, 0, map_width, map_height)
     # Split into nodes
@@ -228,24 +244,26 @@ def generate_bsp_dungeon(
         x, y, w, h = node.x + 1, node.y + 1, node.w - 2, node.h - 2
         w = min(w, room_max_size)
         h = min(h, room_max_size)
-        if w < room_min_size or h < room_min_size:
-            continue
+        # if w < room_min_size or h < room_min_size:
+        #    continue
+
         new_room = RectangularRoom(x, y, w, h)
+        dungeon.tiles[new_room.inner] = tile_types.floor
         rooms.append(new_room)
 
     # Add monsters and items
     for room in rooms:
-        dungeon.tiles[room.inner] = tile_types.floor
         place_entities(room, dungeon, engine.game_world.current_floor)
 
     connect_rooms(rooms, dungeon)
+
     # Random room for the stairs
-    stairs_location = random.choice(rooms)
+    stairs_location = rooms[0]
     dungeon.downstairs_location = stairs_location.center
     dungeon.tiles[stairs_location.center] = tile_types.down_stairs
 
     # Random room for player start
-    player_location = random.choice(rooms)
+    player_location = rooms[0]
     player.place(*player_location.center, dungeon)
 
     return dungeon
@@ -283,3 +301,40 @@ def create_h_tunnel(x1, x2, y, game_map):
 def create_v_tunnel(y1, y2, x, game_map):
     for y in range(min(y1, y2), max(y1, y2) + 1):
         game_map.tiles[x, y] = tile_types.floor
+
+
+def tunnel_between(start: Tuple[int, int], end: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
+    """Return an L-shaped tunnel between these two points."""
+    x1, y1 = start
+    x2, y2 = end
+    if random.random() < 0.5:  # 50% chance.
+        # Move horizontally, then vertically.
+        corner_x, corner_y = x2, y1
+    else:
+        # Move vertically, then horizontally.
+        corner_x, corner_y = x1, y2
+
+    # Generate the coordinates for this tunnel.
+    for x, y in tcod.los.bresenham((x1, y1), (corner_x, corner_y)).tolist():
+        yield x, y
+    for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
+        yield x, y
+
+
+def simulate_ore_deposits(game_map):
+    for ore_type in ore_types:
+        ore_name, ore_tile, ore_density, ore_spread, ore_size = ore_type
+        """Simulates ore deposits on the map based on given parameters."""
+        for x in range(game_map.width):
+            for y in range(game_map.height):
+                if np.random.random() < ore_density:
+                    size = np.random.randint(ore_size // 2, ore_size + 1)
+                    spread = np.random.randint(
+                        ore_spread // 2, ore_spread + 1)
+                    for ox in range(-size, size + 1):
+                        for oy in range(-size, size + 1):
+                            if 0 <= x + ox < game_map.width and 0 <= y + oy < game_map.height:
+                                if (ox ** 2 + oy ** 2) <= (size ** 2):
+                                    if np.random.random() < 1.0 / spread:
+                                        game_map.tiles[x + ox,
+                                                       y + oy] = ore_tile
